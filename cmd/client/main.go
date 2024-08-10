@@ -37,4 +37,13 @@ func main() {
 		log.Fatalf("could not greet: %v", err)
 	}
 	log.Printf("Greeting: %s", r.GetMessage())
+
+	uc := pb.NewUserClient(conn)
+	ctx2, cancel2 := context.WithTimeout(context.Background(), time.Second)
+	defer cancel2()
+	r2, err2 := uc.GetUser(ctx2, &pb.UserRequest{Name: "xxx"})
+	if err2 != nil {
+		log.Fatalf("could not greet: %v", err2)
+	}
+	log.Printf("Greeting: %s", r2.GetId())
 }
