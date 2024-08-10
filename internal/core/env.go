@@ -10,6 +10,9 @@ import (
 type Env struct {
 	AppEnv        string `mapstructure:"APP_ENV"`
 	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
+	LogLevel      string `mapstructure:"LOG_LEVEL"`
+	LogEncoder    string `mapstructure:"LOG_ENCODER"`
+	LogFileName   string `mapstructure:"LOG_FILENAME"`
 }
 
 func NewEnv() Env {
