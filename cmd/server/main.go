@@ -18,8 +18,8 @@ func (s *GreeterServerImpl) SayHello(_ context.Context, in *pb.HelloRequest) (*p
 	return &pb.HelloReply{Message: "Hello " + in.GetName()}, nil
 }
 
-func (s *GreeterServerImpl) ServiceDesc() *grpc.ServiceDesc {
-	return &pb.Greeter_ServiceDesc
+func (s *GreeterServerImpl) Register(svr *grpc.Server) {
+	pb.RegisterGreeterServer(svr, s)
 }
 
 func NewGreetService() *GreeterServerImpl {
@@ -35,8 +35,8 @@ func (s *UserServerImpl) GetUser(_ context.Context, in *pb.UserRequest) (*pb.Use
 	return &pb.UserResponse{Id: "0"}, nil
 }
 
-func (s *UserServerImpl) ServiceDesc() *grpc.ServiceDesc {
-	return &pb.User_ServiceDesc
+func (s *UserServerImpl) Register(svr *grpc.Server) {
+	pb.RegisterUserServer(svr, s)
 }
 
 func NewUserService() *UserServerImpl {

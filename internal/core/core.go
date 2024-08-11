@@ -3,9 +3,7 @@ package core
 import (
 	"context"
 	"fmt"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"go.uber.org/fx"
-	"go.uber.org/zap"
 	"google.golang.org/grpc"
 	"log"
 	"net"
@@ -22,21 +20,18 @@ func NewNetListener(env Env) *net.Listener {
 func NewGrpcServer(
 	lc fx.Lifecycle,
 	listener *net.Listener,
-	logger *zap.Logger,
+	grpcInterceptorParams GrpcInterceptorParams,
 ) *grpc.Server {
-	opts := []logging.Option{
-		logging.WithLogOnEvents(logging.StartCall, logging.FinishCall),
-		// Add any other option (check functions starting with logging.With).
+	interceptorsSize := len(grpcInterceptorParams.GrpcServerInterceptors)
+	unaryInterceptors := make([]grpc.UnaryServerInterceptor, interceptorsSize)
+	streamInterceptors := make([]grpc.StreamServerInterceptor, interceptorsSize)
+	for idx, gsi := range grpcInterceptorParams.GrpcServerInterceptors {
+		unaryInterceptors[idx] = gsi.Unary()
+		streamInterceptors[idx] = gsi.Stream()
 	}
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(
-			logging.UnaryServerInterceptor(InterceptorLogger(logger), opts...),
-			// Add any other interceptor you want.
-		),
-		grpc.ChainStreamInterceptor(
-			logging.StreamServerInterceptor(InterceptorLogger(logger), opts...),
-			// Add any other interceptor you want.
-		),
+		grpc.ChainUnaryInterceptor(unaryInterceptors...),
+		grpc.ChainStreamInterceptor(streamInterceptors...),
 	)
 	lc.Append(
 		fx.Hook{
@@ -56,9 +51,14 @@ func NewGrpcServer(
 	return s
 }
 
-var Module = fx.Module(
-	"ModuleCOre",
+var moduleCore = fx.Module(
+	"ModuleCore",
 	fx.Provide(NewEnv, NewNetListener, NewGrpcServer),
+)
+
+var Module = fx.Module(
+	"ModuleMain",
+	moduleCore,
 	moduleGrpcService,
-	moduleZapLogger,
+	moduleLog,
 )

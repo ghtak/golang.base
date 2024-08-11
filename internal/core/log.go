@@ -7,6 +7,7 @@ import (
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"google.golang.org/grpc"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 )
@@ -92,6 +93,35 @@ func NewZapLogger(
 	return zap.New(core)
 }
 
-var moduleZapLogger = fx.Module(
-	"ModuleZapLogger",
-	fx.Provide(NewEncoder, NewWriteSyncer, NewZapLogger))
+type LoggingGrpcServerInterceptor struct {
+	logger *zap.Logger
+	opts   []logging.Option
+}
+
+func (l LoggingGrpcServerInterceptor) Unary() grpc.UnaryServerInterceptor {
+	return logging.UnaryServerInterceptor(InterceptorLogger(l.logger), l.opts...)
+}
+
+func (l LoggingGrpcServerInterceptor) Stream() grpc.StreamServerInterceptor {
+	return logging.StreamServerInterceptor(InterceptorLogger(l.logger), l.opts...)
+}
+
+func NewLoggingGrpcServerInterceptor(logger *zap.Logger) LoggingGrpcServerInterceptor {
+	return LoggingGrpcServerInterceptor{
+		logger: logger,
+		opts: []logging.Option{
+			logging.WithLogOnEvents(
+				logging.StartCall,
+				logging.FinishCall,
+				logging.PayloadReceived,
+				logging.PayloadSent),
+			// Add any other option (check functions starting with logging.With).
+		},
+	}
+}
+
+var moduleLog = fx.Module(
+	"ModuleLog",
+	fx.Provide(NewEncoder, NewWriteSyncer, NewZapLogger),
+	fx.Provide(AsGrpcServerInterceptor(NewLoggingGrpcServerInterceptor)),
+)

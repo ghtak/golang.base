@@ -6,7 +6,7 @@ import (
 )
 
 type GrpcService interface {
-	ServiceDesc() *grpc.ServiceDesc
+	Register(s *grpc.Server)
 }
 
 func AsGrpcService(s interface{}) interface{} {
@@ -16,15 +16,12 @@ func AsGrpcService(s interface{}) interface{} {
 		fx.ResultTags(`group:"GrpcService"`))
 }
 
-type RegisterServiceCtx struct {
+type RegisterServiceInitCtx struct {
 }
 
-func RegisterService(services []GrpcService, s *grpc.Server) *RegisterServiceCtx {
+func RegisterService(services []GrpcService, s *grpc.Server) *RegisterServiceInitCtx {
 	for _, svc := range services {
-		if t, ok := svc.(interface{ testEmbeddedByValue() }); ok {
-			t.testEmbeddedByValue()
-		}
-		s.RegisterService(svc.ServiceDesc(), svc)
+		svc.Register(s)
 	}
 	return nil
 }
@@ -32,4 +29,5 @@ func RegisterService(services []GrpcService, s *grpc.Server) *RegisterServiceCtx
 var moduleGrpcService = fx.Module(
 	"ModuleGrpcService",
 	fx.Provide(fx.Annotate(RegisterService, fx.ParamTags(`group:"GrpcService"`))),
-	fx.Invoke(func(*RegisterServiceCtx) {}))
+	fx.Invoke(func(*RegisterServiceInitCtx) {}),
+)
