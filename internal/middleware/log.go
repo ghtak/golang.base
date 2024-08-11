@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"go.uber.org/zap"
-	"google.golang.org/grpc"
 )
 
 func InterceptorLogger(l *zap.Logger) logging.Logger {
@@ -43,31 +42,4 @@ func InterceptorLogger(l *zap.Logger) logging.Logger {
 			panic(fmt.Sprintf("unknown level %v", lvl))
 		}
 	})
-}
-
-type LoggingMiddleware struct {
-	logger *zap.Logger
-	opts   []logging.Option
-}
-
-func (l LoggingMiddleware) Unary() grpc.UnaryServerInterceptor {
-	return logging.UnaryServerInterceptor(InterceptorLogger(l.logger), l.opts...)
-}
-
-func (l LoggingMiddleware) Stream() grpc.StreamServerInterceptor {
-	return logging.StreamServerInterceptor(InterceptorLogger(l.logger), l.opts...)
-}
-
-func NewLoggingMiddleware(logger *zap.Logger) LoggingMiddleware {
-	return LoggingMiddleware{
-		logger: logger,
-		opts: []logging.Option{
-			logging.WithLogOnEvents(
-				logging.StartCall,
-				logging.FinishCall,
-				logging.PayloadReceived,
-				logging.PayloadSent),
-			// Add any other option (check functions starting with logging.With).
-		},
-	}
 }

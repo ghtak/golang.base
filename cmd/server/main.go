@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	pb "github.com/ghtak/golang.grpc.base/gen/go"
+	"github.com/ghtak/golang.grpc.base/internal/application"
 	"github.com/ghtak/golang.grpc.base/internal/core"
 	"github.com/ghtak/golang.grpc.base/internal/middleware"
 	"go.uber.org/fx"
@@ -48,6 +49,7 @@ func main() {
 	fx.New(
 		core.Module,
 		middleware.Module,
+		application.ModuleAuth,
 		fx.Provide(
 			core.AsGrpcService(NewGreetService),
 			core.AsGrpcService(NewUserService),

@@ -1,47 +1,68 @@
 package middleware
 
 import (
+	"context"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/auth"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/selector"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
 
-type Middleware interface {
-	Unary() grpc.UnaryServerInterceptor
-	Stream() grpc.StreamServerInterceptor
-}
-
-func AsMiddleware(i interface{}) interface{} {
-	return fx.Annotate(i, fx.As(new(Middleware)), fx.ResultTags(`group:"Middleware"`))
-}
-
-type Params struct {
-	fx.In
-	Middlewares []Middleware `group:"Middleware"`
-}
-
-func (p Params) UnaryMiddlewares() []grpc.UnaryServerInterceptor {
-	interceptorsSize := len(p.Middlewares)
-	interceptors := make([]grpc.UnaryServerInterceptor, interceptorsSize)
-	for idx, i := range p.Middlewares {
-		interceptors[idx] = i.Unary()
+func NewLoggingOptions() []logging.Option {
+	return []logging.Option{
+		logging.WithLogOnEvents(
+			logging.StartCall,
+			logging.FinishCall,
+			logging.PayloadReceived,
+			logging.PayloadSent),
 	}
-	return interceptors
 }
 
-func (p Params) StreamMiddlewares() []grpc.StreamServerInterceptor {
-	interceptorsSize := len(p.Middlewares)
-	interceptors := make([]grpc.StreamServerInterceptor, interceptorsSize)
-	for idx, i := range p.Middlewares {
-		interceptors[idx] = i.Stream()
+func NewUnaryServerInterceptors(
+	logger *zap.Logger,
+	opts []logging.Option,
+	authFn auth.AuthFunc,
+	selectAuthFn func(ctx context.Context, callMeta interceptors.CallMeta) bool,
+) []grpc.UnaryServerInterceptor {
+	return []grpc.UnaryServerInterceptor{
+		logging.UnaryServerInterceptor(InterceptorLogger(logger), opts...),
+		selector.UnaryServerInterceptor(
+			auth.UnaryServerInterceptor(authFn),
+			selector.MatchFunc(selectAuthFn)),
+		recovery.UnaryServerInterceptor(),
 	}
-	return interceptors
+}
+
+func NewStreamServerInterceptors(
+	logger *zap.Logger,
+	opts []logging.Option,
+	authFn auth.AuthFunc,
+	selectAuthFn func(ctx context.Context, callMeta interceptors.CallMeta) bool,
+) []grpc.StreamServerInterceptor {
+	return []grpc.StreamServerInterceptor{
+		logging.StreamServerInterceptor(InterceptorLogger(logger), opts...),
+		selector.StreamServerInterceptor(
+			auth.StreamServerInterceptor(authFn),
+			selector.MatchFunc(selectAuthFn)),
+		recovery.StreamServerInterceptor(),
+	}
 }
 
 var Module = fx.Module(
 	"ModuleMiddleware",
 	fx.Provide(
-		AsMiddleware(NewLoggingMiddleware),
-		AsMiddleware(NewRecoveryMiddleware),
-		//AsMiddleware(NewAuthMiddleware),
+		NewLoggingOptions,
+		NewUnaryServerInterceptors,
+		NewStreamServerInterceptors,
 	),
 )
+
+type Params struct {
+	fx.In
+	UnaryServerInterceptors  []grpc.UnaryServerInterceptor
+	StreamServerInterceptors []grpc.StreamServerInterceptor
+}

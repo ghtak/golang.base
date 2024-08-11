@@ -10,28 +10,29 @@ import (
 	"net"
 )
 
+func serveGRPC(s *grpc.Server, env Env) {
+	lis, err := net.Listen("tcp", fmt.Sprintf(env.GrpcAddress))
+	if err != nil {
+		log.Fatalf("failed to listen: %v", err)
+	}
+	err = s.Serve(lis)
+	if err != nil {
+		log.Fatalf("failed to serve: %v", err)
+	}
+}
+
 func NewGrpcServer(
 	lc fx.Lifecycle,
 	env Env,
-	m middleware.Params,
+	middleware middleware.Params,
 ) *grpc.Server {
 	s := grpc.NewServer(
-		grpc.ChainUnaryInterceptor(m.UnaryMiddlewares()...),
-		grpc.ChainStreamInterceptor(m.StreamMiddlewares()...),
-	)
+		grpc.ChainUnaryInterceptor(middleware.UnaryServerInterceptors...),
+		grpc.ChainStreamInterceptor(middleware.StreamServerInterceptors...))
 	lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				go func() {
-					lis, err := net.Listen("tcp", fmt.Sprintf(env.GrpcAddress))
-					if err != nil {
-						log.Fatalf("failed to listen: %v", err)
-					}
-					err = s.Serve(lis)
-					if err != nil {
-						log.Fatalf("failed to serve: %v", err)
-					}
-				}()
+				go serveGRPC(s, env)
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
