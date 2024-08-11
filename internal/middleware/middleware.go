@@ -11,10 +11,7 @@ type Middleware interface {
 }
 
 func AsMiddleware(i interface{}) interface{} {
-	return fx.Annotate(
-		i,
-		fx.As(new(Middleware)),
-		fx.ResultTags(`group:"Middleware"`))
+	return fx.Annotate(i, fx.As(new(Middleware)), fx.ResultTags(`group:"Middleware"`))
 }
 
 type Params struct {
@@ -42,6 +39,9 @@ func (p Params) StreamMiddlewares() []grpc.StreamServerInterceptor {
 
 var Module = fx.Module(
 	"ModuleMiddleware",
-	fx.Provide(AsMiddleware(NewLoggingMiddleware)),
-	fx.Provide(AsMiddleware(NewRecoveryMiddleware)),
+	fx.Provide(
+		AsMiddleware(NewLoggingMiddleware),
+		AsMiddleware(NewRecoveryMiddleware),
+		//AsMiddleware(NewAuthMiddleware),
+	),
 )
