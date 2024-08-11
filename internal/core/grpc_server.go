@@ -36,6 +36,7 @@ func NewGrpcServer(
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
+				s.GracefulStop()
 				return nil
 			},
 		})
