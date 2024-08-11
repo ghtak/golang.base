@@ -2,10 +2,17 @@ syntax = "proto3";
 
 option go_package = "github.com/ghtak/golang.grpc.base/helloworld";
 
+import "google/api/annotations.proto";
+
 // The greeting service definition.
 service Greeter {
   // Sends a greeting
-  rpc SayHello (HelloRequest) returns (HelloReply) {}
+  rpc SayHello (HelloRequest) returns (HelloReply) {
+    option (google.api.http) = {
+      post: "/v1/greeter/hello"
+      body: "*"
+    };
+  }
   // Sends another greeting
   rpc SayHelloAgain (HelloRequest) returns (HelloReply) {}
 }

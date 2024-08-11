@@ -1,53 +1,12 @@
 package core
 
 import (
-	"context"
-	"fmt"
-	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
 	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 )
-
-func InterceptorLogger(l *zap.Logger) logging.Logger {
-	return logging.LoggerFunc(func(ctx context.Context, lvl logging.Level, msg string, fields ...any) {
-		f := make([]zap.Field, 0, len(fields)/2)
-
-		for i := 0; i < len(fields); i += 2 {
-			key := fields[i]
-			value := fields[i+1]
-
-			switch v := value.(type) {
-			case string:
-				f = append(f, zap.String(key.(string), v))
-			case int:
-				f = append(f, zap.Int(key.(string), v))
-			case bool:
-				f = append(f, zap.Bool(key.(string), v))
-			default:
-				f = append(f, zap.Any(key.(string), v))
-			}
-		}
-
-		logger := l.WithOptions(zap.AddCallerSkip(1)).With(f...)
-
-		switch lvl {
-		case logging.LevelDebug:
-			logger.Debug(msg)
-		case logging.LevelInfo:
-			logger.Info(msg)
-		case logging.LevelWarn:
-			logger.Warn(msg)
-		case logging.LevelError:
-			logger.Error(msg)
-		default:
-			panic(fmt.Sprintf("unknown level %v", lvl))
-		}
-	})
-}
 
 func NewEncoder(env Env) zapcore.Encoder {
 	encoderConfig := zapcore.EncoderConfig{
@@ -93,35 +52,7 @@ func NewZapLogger(
 	return zap.New(core)
 }
 
-type LoggingGrpcServerInterceptor struct {
-	logger *zap.Logger
-	opts   []logging.Option
-}
-
-func (l LoggingGrpcServerInterceptor) Unary() grpc.UnaryServerInterceptor {
-	return logging.UnaryServerInterceptor(InterceptorLogger(l.logger), l.opts...)
-}
-
-func (l LoggingGrpcServerInterceptor) Stream() grpc.StreamServerInterceptor {
-	return logging.StreamServerInterceptor(InterceptorLogger(l.logger), l.opts...)
-}
-
-func NewLoggingGrpcServerInterceptor(logger *zap.Logger) LoggingGrpcServerInterceptor {
-	return LoggingGrpcServerInterceptor{
-		logger: logger,
-		opts: []logging.Option{
-			logging.WithLogOnEvents(
-				logging.StartCall,
-				logging.FinishCall,
-				logging.PayloadReceived,
-				logging.PayloadSent),
-			// Add any other option (check functions starting with logging.With).
-		},
-	}
-}
-
 var moduleLog = fx.Module(
 	"ModuleLog",
 	fx.Provide(NewEncoder, NewWriteSyncer, NewZapLogger),
-	fx.Provide(AsGrpcServerInterceptor(NewLoggingGrpcServerInterceptor)),
 )

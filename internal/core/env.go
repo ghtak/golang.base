@@ -8,11 +8,13 @@ import (
 )
 
 type Env struct {
-	AppEnv        string `mapstructure:"APP_ENV"`
-	ServerAddress string `mapstructure:"SERVER_ADDRESS"`
-	LogLevel      string `mapstructure:"LOG_LEVEL"`
-	LogEncoder    string `mapstructure:"LOG_ENCODER"`
-	LogFileName   string `mapstructure:"LOG_FILENAME"`
+	AppEnv             string `mapstructure:"APP_ENV"`
+	GrpcAddress        string `mapstructure:"GRPC_ADDRESS"`
+	GrpcGatewayEnable  bool   `mapstructure:"GRPC_GATEWAY_ENABLE"`
+	GrpcGatewayAddress string `mapstructure:"GRPC_GATEWAY_ADDRESS"`
+	LogLevel           string `mapstructure:"LOG_LEVEL"`
+	LogEncoder         string `mapstructure:"LOG_ENCODER"`
+	LogFileName        string `mapstructure:"LOG_FILENAME"`
 }
 
 func NewEnv() Env {
