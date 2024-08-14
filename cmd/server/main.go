@@ -4,7 +4,6 @@ import (
 	"context"
 	pb "github.com/ghtak/golang.grpc.base/gen/go"
 	"github.com/ghtak/golang.grpc.base/internal/application"
-	"github.com/ghtak/golang.grpc.base/internal/core"
 	"github.com/ghtak/golang.grpc.base/internal/middleware"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
@@ -47,12 +46,12 @@ func NewUserService() *UserServerImpl {
 
 func main() {
 	fx.New(
-		core.Module,
+		core0.Module,
 		middleware.Module,
 		application.ModuleAuth,
 		fx.Provide(
-			core.AsGrpcService(NewGreetService),
-			core.AsGrpcService(NewUserService),
+			core0.AsGrpcService(NewGreetService),
+			core0.AsGrpcService(NewUserService),
 		),
 	).Run()
 }

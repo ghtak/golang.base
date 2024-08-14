@@ -1,4 +1,4 @@
-package core
+package core0
 
 import (
 	"go.uber.org/fx"
