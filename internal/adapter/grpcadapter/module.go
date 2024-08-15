@@ -12,5 +12,5 @@ var (
 var Module = fx.Module(
 	moduleName,
 	fx.Provide(NewServer),
-	fx.Provide(core.AsModuleEnv(NewEnv)),
+	fx.Provide(core.AsNamedEnv(NewEnv)),
 )

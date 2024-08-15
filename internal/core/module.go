@@ -2,9 +2,17 @@ package core
 
 import "go.uber.org/fx"
 
+var (
+	moduleName = "core"
+)
+
 var Module = fx.Module(
-	"core",
+	moduleName,
 	fx.Provide(
-		NewEnvLoader,
-		fx.Annotate(NewEnv, fx.ParamTags(`group:"ModuleEnv"`))),
+		fx.Annotate(
+			NewEnvRepository,
+			fx.ParamTags(`group:"NamedEnv"`),
+		),
+	),
+	fx.Provide(AsNamedEnv(NewEnv)),
 )

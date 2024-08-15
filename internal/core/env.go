@@ -8,44 +8,22 @@ import (
 	"log"
 )
 
-type ModuleEnv interface {
-	ModuleName() string
+type EnvRepository struct {
+	Envs map[string]interface{}
 }
 
-func AsModuleEnv(i interface{}) interface{} {
-	return fx.Annotate(i, fx.As(new(ModuleEnv)), fx.ResultTags(`group:"ModuleEnv"`))
+type NamedEnv interface {
+	Name() string
 }
 
-type Env struct {
-	CoreProfile string `mapstructure:"CORE_PROFILE"`
-	ModuleEnvs  map[string]ModuleEnv
+func AsNamedEnv(i interface{}) interface{} {
+	return fx.Annotate(i, fx.As(new(NamedEnv)), fx.ResultTags(`group:"NamedEnv"`))
 }
 
-func NewEnv(envs []ModuleEnv, loader EnvLoader) *Env {
-	moduleEnvs := make(map[string]ModuleEnv)
-	for _, e := range envs {
-		moduleEnvs[e.ModuleName()] = e
+func NewEnvRepository(envs []NamedEnv) *EnvRepository {
+	envRepo := &EnvRepository{
+		Envs: make(map[string]interface{}),
 	}
-	env := &Env{ModuleEnvs: moduleEnvs}
-	loader.Unmarshal(env)
-	return env
-}
-
-type EnvLoader interface {
-	Unmarshal(env any)
-}
-
-type envLoader struct {
-	envFile *string
-}
-
-func (e envLoader) Unmarshal(env any) {
-	if err := viper.Unmarshal(env); err != nil {
-		log.Fatal(fmt.Sprintf("Can't Load Env %s", *e.envFile), err)
-	}
-}
-
-func NewEnvLoader() EnvLoader {
 	envFile := flag.String("cfg", ".env", "set env filename")
 	flag.Parse()
 	viper.SetConfigFile(*envFile)
@@ -53,5 +31,25 @@ func NewEnvLoader() EnvLoader {
 	if err := viper.ReadInConfig(); err != nil {
 		log.Fatal(fmt.Sprintf("Can't find file %s", *envFile), err)
 	}
-	return envLoader{envFile}
+	for _, env := range envs {
+		if err := viper.Unmarshal(&env); err != nil {
+			log.Fatal(fmt.Sprintf("Can't Load Env %s", *envFile), err)
+		}
+		envRepo.Envs[env.Name()] = env
+	}
+	return envRepo
+}
+
+type Env struct {
+	Profile    string `mapstructure:"PROFILE"`
+	LogLevel   string `mapstructure:"LOG_LEVEL"`
+	LogEncoder string `mapstructure:"LOG_ENCODER"`
+}
+
+func (Env) Name() string {
+	return moduleName
+}
+
+func NewEnv() Env {
+	return Env{}
 }

@@ -10,15 +10,15 @@ import (
 )
 
 func NewServer(
-	env *core.Env,
+	envRepo *core.EnvRepository,
 	lc fx.Lifecycle,
 ) *grpc.Server {
-	moduleEnv := env.ModuleEnvs[moduleName].(Env)
+	myEnv := envRepo.Envs[moduleName].(Env)
 	server := grpc.NewServer()
 	lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				lis, err := net.Listen("tcp", moduleEnv.GrpcadapterAddress)
+				lis, err := net.Listen("tcp", myEnv.GrpcadapterAddress)
 				if err != nil {
 					log.Fatalf("failed to listen: %v", err)
 					return err
