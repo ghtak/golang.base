@@ -1,4 +1,4 @@
-package grpcadapter
+package grpcfx
 
 import "github.com/ghtak/golang.grpc.base/internal/core"
 
