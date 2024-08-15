@@ -2,31 +2,33 @@ package grpcadapter
 
 import (
 	"context"
-	"github.com/ghtak/golang.grpc.base/internal/core"
+	"fmt"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	"log"
 	"net"
 )
 
 func NewServer(
-	envRepo *core.EnvRepository,
+	env Env,
+	log *zap.Logger,
 	lc fx.Lifecycle,
 ) *grpc.Server {
-	myEnv := envRepo.Envs[moduleName].(Env)
 	server := grpc.NewServer()
 	lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				lis, err := net.Listen("tcp", myEnv.GrpcadapterAddress)
+				address := fmt.Sprintf("%s:%d", env.Address, env.Port)
+				log.Info("grpc start", zap.String("address", address))
+				lis, err := net.Listen("tcp", address)
 				if err != nil {
-					log.Fatalf("failed to listen: %v", err)
+					log.Error("failed to listen", zap.Error(err))
 					return err
 				}
 				go func() {
 					err = server.Serve(lis)
 					if err != nil {
-						log.Fatalf("failed to serve: %v", err)
+						log.Error("failed to listen", zap.Error(err))
 					}
 				}()
 				return nil

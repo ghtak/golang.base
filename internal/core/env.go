@@ -4,52 +4,64 @@ import (
 	"fmt"
 	flag "github.com/spf13/pflag"
 	"github.com/spf13/viper"
-	"go.uber.org/fx"
 	"log"
 )
 
-type EnvRepository struct {
-	Envs map[string]interface{}
-}
-
-type NamedEnv interface {
-	Name() string
-}
-
-func AsNamedEnv(i interface{}) interface{} {
-	return fx.Annotate(i, fx.As(new(NamedEnv)), fx.ResultTags(`group:"NamedEnv"`))
-}
-
-func NewEnvRepository(envs []NamedEnv) *EnvRepository {
-	envRepo := &EnvRepository{
-		Envs: make(map[string]interface{}),
-	}
-	envFile := flag.String("cfg", ".env", "set env filename")
+func NewEnv() Env {
+	cfgFile := flag.String("cfg-file", "dev.conf", "set config filename")
+	cfgType := flag.String("cfg-type", "json", "set config type json, yaml. toml")
 	flag.Parse()
-	viper.SetConfigFile(*envFile)
-	viper.SetConfigType("env")
-	if err := viper.ReadInConfig(); err != nil {
-		log.Fatal(fmt.Sprintf("Can't find file %s", *envFile), err)
+	env := Env{viper.New()}
+	env.viper.SetConfigFile(*cfgFile)
+	env.viper.SetConfigType(*cfgType)
+	if err := env.viper.ReadInConfig(); err != nil {
+		log.Fatal(fmt.Sprintf("ReadInConfig Fail With %s %s", *cfgFile, *cfgType), err)
 	}
-	for _, env := range envs {
-		if err := viper.Unmarshal(&env); err != nil {
-			log.Fatal(fmt.Sprintf("Can't Load Env %s", *envFile), err)
-		}
-		envRepo.Envs[env.Name()] = env
-	}
-	return envRepo
+	return env
 }
 
 type Env struct {
-	Profile    string `mapstructure:"PROFILE"`
-	LogLevel   string `mapstructure:"LOG_LEVEL"`
-	LogEncoder string `mapstructure:"LOG_ENCODER"`
+	viper *viper.Viper
 }
 
-func (Env) Name() string {
-	return moduleName
+func (e Env) GetString(key string, defValue string) string {
+	if e.viper.IsSet(key) {
+		return e.viper.GetString(key)
+	}
+	return defValue
 }
 
-func NewEnv() Env {
-	return Env{}
+func (e Env) GetInt(key string, defValue int) int {
+	if e.viper.IsSet(key) {
+		return e.viper.GetInt(key)
+	}
+	return defValue
+}
+
+func (e Env) Sub(envPrefix string) SubEnv {
+	return SubEnv{
+		Env:       e,
+		envPrefix: envPrefix,
+	}
+}
+
+type SubEnv struct {
+	Env
+	envPrefix string
+}
+
+func (e SubEnv) GetString(key string, defValue string) string {
+	key = fmt.Sprintf("%s.%s", e.envPrefix, key)
+	if e.viper.IsSet(key) {
+		return e.viper.GetString(key)
+	}
+	return defValue
+}
+
+func (e SubEnv) GetInt(key string, defValue int) int {
+	key = fmt.Sprintf("%s.%s", e.envPrefix, key)
+	if e.viper.IsSet(key) {
+		return e.viper.GetInt(key)
+	}
+	return defValue
 }

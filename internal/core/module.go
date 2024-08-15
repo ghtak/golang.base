@@ -8,11 +8,5 @@ var (
 
 var Module = fx.Module(
 	moduleName,
-	fx.Provide(
-		fx.Annotate(
-			NewEnvRepository,
-			fx.ParamTags(`group:"NamedEnv"`),
-		),
-	),
-	fx.Provide(AsNamedEnv(NewEnv)),
+	fx.Provide(NewEnv, NewLogger),
 )

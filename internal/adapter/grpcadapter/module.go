@@ -1,7 +1,6 @@
 package grpcadapter
 
 import (
-	"github.com/ghtak/golang.grpc.base/internal/core"
 	"go.uber.org/fx"
 )
 
@@ -11,6 +10,5 @@ var (
 
 var Module = fx.Module(
 	moduleName,
-	fx.Provide(NewServer),
-	fx.Provide(core.AsNamedEnv(NewEnv)),
+	fx.Provide(NewServer, NewEnv),
 )

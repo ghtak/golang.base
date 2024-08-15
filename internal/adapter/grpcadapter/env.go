@@ -1,13 +1,15 @@
 package grpcadapter
 
+import "github.com/ghtak/golang.grpc.base/internal/core"
+
 type Env struct {
-	GrpcadapterAddress string `mapstructure:"GRPCADAPTER_ADDRESS"`
+	Address string
+	Port    int
 }
 
-func (Env) Name() string {
-	return moduleName
-}
-
-func NewEnv() Env {
-	return Env{}
+func NewEnv(env core.Env) Env {
+	return Env{
+		Address: env.GetString("grpc.address", "0.0.0.0"),
+		Port:    env.GetInt("grpc.port", 9999),
+	}
 }
