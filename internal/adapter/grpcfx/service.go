@@ -18,17 +18,17 @@ func AsService(s interface{}) interface{} {
 	return fx.Annotate(s, fx.As(new(Service)), fx.ResultTags(tagService))
 }
 
-type ServiceInit struct{}
+type serviceInit struct{}
 
-func RegisterService(services []Service, s *grpc.Server) ServiceInit {
+func RegisterService(services []Service, s *grpc.Server) serviceInit {
 	for _, service := range services {
 		service.Register(s)
 	}
-	return ServiceInit{}
+	return serviceInit{}
 }
 
 var ModuleService = fx.Module(
 	fmt.Sprintf("%s.Service", moduleName),
 	fx.Provide(fx.Annotate(RegisterService, fx.ParamTags(tagService))),
-	fx.Invoke(func(ServiceInit) {}),
+	fx.Invoke(func(serviceInit) {}),
 )

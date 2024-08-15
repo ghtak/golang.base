@@ -32,7 +32,6 @@ func NewServer(params ServerParams) (ServerResults, error) {
 	} else {
 		server = grpc.NewServer()
 	}
-
 	params.Lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
@@ -43,12 +42,7 @@ func NewServer(params ServerParams) (ServerResults, error) {
 					params.Log.Error("failed to listen", zap.Error(err))
 					return err
 				}
-				go func() {
-					err = server.Serve(lis)
-					if err != nil {
-						params.Log.Error("failed to listen", zap.Error(err))
-					}
-				}()
+				go server.Serve(lis)
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {
