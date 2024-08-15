@@ -4,6 +4,7 @@ import (
 	"context"
 	pb "github.com/ghtak/golang.grpc.base/gen/go"
 	"github.com/ghtak/golang.grpc.base/internal/application"
+	"github.com/ghtak/golang.grpc.base/internal/core0"
 	"github.com/ghtak/golang.grpc.base/internal/middleware"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
