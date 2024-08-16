@@ -1,7 +1,6 @@
 package grpcfx
 
 import (
-	"fmt"
 	"go.uber.org/fx"
 	"google.golang.org/grpc"
 )
@@ -18,17 +17,11 @@ func AsService(s interface{}) interface{} {
 	return fx.Annotate(s, fx.As(new(Service)), fx.ResultTags(tagService))
 }
 
-type serviceInit struct{}
+type RunRegisterServiceResults struct{}
 
-func RegisterService(services []Service, s *grpc.Server) serviceInit {
+func registerService(services []Service, s *grpc.Server) RunRegisterServiceResults {
 	for _, service := range services {
 		service.Register(s)
 	}
-	return serviceInit{}
+	return RunRegisterServiceResults{}
 }
-
-var ModuleService = fx.Module(
-	fmt.Sprintf("%s.Service", moduleName),
-	fx.Provide(fx.Annotate(RegisterService, fx.ParamTags(tagService))),
-	fx.Invoke(func(serviceInit) {}),
-)

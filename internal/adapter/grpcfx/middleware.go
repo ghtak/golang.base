@@ -9,18 +9,18 @@ import (
 	"google.golang.org/grpc"
 )
 
-type ServerMiddlewares interface {
+type ServerMiddleware interface {
 	Options() []grpc.ServerOption
 }
 
-type defaultServerMiddlewares func() []grpc.ServerOption
+type defaultServerMiddleware func() []grpc.ServerOption
 
-func (m defaultServerMiddlewares) Options() []grpc.ServerOption {
+func (m defaultServerMiddleware) Options() []grpc.ServerOption {
 	return m()
 }
 
-func NewDefaultServerMiddlewares(logger *zap.Logger) ServerMiddlewares {
-	return defaultServerMiddlewares(func() []grpc.ServerOption {
+func NewDefaultServerMiddleware(logger *zap.Logger) ServerMiddleware {
+	return defaultServerMiddleware(func() []grpc.ServerOption {
 		return []grpc.ServerOption{
 			grpc.ChainUnaryInterceptor(
 				logging.UnaryServerInterceptor(InterceptorLogger(logger), NewLoggingOptions()...),

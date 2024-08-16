@@ -11,10 +11,10 @@ import (
 
 type ServerParams struct {
 	fx.In
-	Lc                fx.Lifecycle
-	Env               Env
-	Log               *zap.Logger
-	ServerMiddlewares ServerMiddlewares `optional:"true"`
+	Lc               fx.Lifecycle
+	Env              Env
+	Log              *zap.Logger
+	ServerMiddleware ServerMiddleware `optional:"true"`
 }
 
 type ServerResults struct {
@@ -24,8 +24,8 @@ type ServerResults struct {
 
 func NewServer(p ServerParams) (ServerResults, error) {
 	var server *grpc.Server
-	if p.ServerMiddlewares != nil {
-		server = grpc.NewServer(p.ServerMiddlewares.Options()...)
+	if p.ServerMiddleware != nil {
+		server = grpc.NewServer(p.ServerMiddleware.Options()...)
 	} else {
 		server = grpc.NewServer()
 	}
@@ -39,7 +39,12 @@ func NewServer(p ServerParams) (ServerResults, error) {
 					p.Log.Error("failed to listen", zap.Error(err))
 					return err
 				}
-				go server.Serve(lis)
+				go func() {
+					err := server.Serve(lis)
+					if err != nil {
+						p.Log.Error("gprc serve error", zap.Error(err))
+					}
+				}()
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {

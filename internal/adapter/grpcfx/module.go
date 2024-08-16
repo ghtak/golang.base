@@ -2,20 +2,16 @@ package grpcfx
 
 import (
 	"go.uber.org/fx"
-	"google.golang.org/grpc"
-)
-
-var (
-	moduleName = "grpcfx"
 )
 
 var Module = fx.Module(
-	moduleName,
-	fx.Provide(NewServer, NewEnv),
-	ModuleService,
+	"grpcfx",
+	fx.Provide(
+		NewServer, NewEnv,
+		fx.Annotate(registerService, fx.ParamTags(tagService))),
 )
 
 type RunServerParams struct {
 	fx.In
-	Server *grpc.Server
+	RunRegisterServiceResults
 }
