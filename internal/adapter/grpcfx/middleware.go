@@ -10,40 +10,46 @@ import (
 )
 
 type ServerMiddlewares interface {
-	UnaryServerInterceptors() []grpc.UnaryServerInterceptor
-	StreamServerInterceptors() []grpc.StreamServerInterceptor
+	Options() []grpc.ServerOption
+}
+
+type defaultServerMiddlewares func() []grpc.ServerOption
+
+func (m defaultServerMiddlewares) Options() []grpc.ServerOption {
+	return m()
 }
 
 func NewDefaultServerMiddlewares(logger *zap.Logger) ServerMiddlewares {
-	return defaultServerMiddlewares{
-		logger: logger,
-		opts:   NewLoggingOptions(),
-	}
-}
-
-type defaultServerMiddlewares struct {
-	logger *zap.Logger
-	opts   []logging.Option
-}
-
-func (o defaultServerMiddlewares) UnaryServerInterceptors() []grpc.UnaryServerInterceptor {
-	return []grpc.UnaryServerInterceptor{
-		logging.UnaryServerInterceptor(InterceptorLogger(o.logger), o.opts...),
-		//selector.UnaryServerInterceptor(
-		//	auth.UnaryServerInterceptor(authFn),
-		//	selector.MatchFunc(selectAuthFn)),
-		recovery.UnaryServerInterceptor(),
-	}
-}
-
-func (o defaultServerMiddlewares) StreamServerInterceptors() []grpc.StreamServerInterceptor {
-	return []grpc.StreamServerInterceptor{
-		logging.StreamServerInterceptor(InterceptorLogger(o.logger), o.opts...),
-		//selector.StreamServerInterceptor(
-		//	auth.StreamServerInterceptor(authFn),
-		//	selector.MatchFunc(selectAuthFn)),
-		recovery.StreamServerInterceptor(),
-	}
+	return defaultServerMiddlewares(func() []grpc.ServerOption {
+		return []grpc.ServerOption{
+			grpc.ChainUnaryInterceptor(
+				logging.UnaryServerInterceptor(InterceptorLogger(logger), NewLoggingOptions()...),
+				//selector.UnaryServerInterceptor(
+				//	auth.UnaryServerInterceptor(authFn),
+				//	selector.MatchFunc(selectAuthFn)),
+				recovery.UnaryServerInterceptor(),
+			),
+			grpc.ChainStreamInterceptor(
+				logging.StreamServerInterceptor(InterceptorLogger(logger), NewLoggingOptions()...),
+				//selector.StreamServerInterceptor(
+				//	auth.StreamServerInterceptor(authFn),
+				//	selector.MatchFunc(selectAuthFn)),
+				recovery.StreamServerInterceptor(),
+			),
+			//grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			//	MinTime:             5 * time.Minute,
+			//	PermitWithoutStream: false,
+			//}),
+			//grpc.KeepaliveParams(keepalive.ServerParameters{
+			//	MaxConnectionIdle:     15 * time.Minute,
+			//	MaxConnectionAge:      30 * time.Minute,
+			//	MaxConnectionAgeGrace: 5 * time.Minute,
+			//	Time:                  5 * time.Minute,
+			//	Timeout:               1 * time.Minute,
+			//}),
+			//grpc.Creds(...),
+		}
+	})
 }
 
 func NewLoggingOptions() []logging.Option {

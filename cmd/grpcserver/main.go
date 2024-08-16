@@ -12,7 +12,7 @@ func main() {
 	fx.New(
 		core.Module,
 		grpcfx.Module,
-		// fx.Provide(grpcfx.NewDefaultServerMiddlewares),
+		fx.Provide(grpcfx.NewDefaultServerMiddlewares),
 		fx.Provide(
 			grpcfx.AsService(app.NewGreetService),
 			grpcfx.AsService(app.NewUserService),

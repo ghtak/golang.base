@@ -22,24 +22,21 @@ type ServerResults struct {
 	Server *grpc.Server
 }
 
-func NewServer(params ServerParams) (ServerResults, error) {
+func NewServer(p ServerParams) (ServerResults, error) {
 	var server *grpc.Server
-	if params.ServerMiddlewares != nil {
-		server = grpc.NewServer(
-			grpc.ChainUnaryInterceptor(params.ServerMiddlewares.UnaryServerInterceptors()...),
-			grpc.ChainStreamInterceptor(params.ServerMiddlewares.StreamServerInterceptors()...),
-		)
+	if p.ServerMiddlewares != nil {
+		server = grpc.NewServer(p.ServerMiddlewares.Options()...)
 	} else {
 		server = grpc.NewServer()
 	}
-	params.Lc.Append(
+	p.Lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				address := fmt.Sprintf("%s:%d", params.Env.Address, params.Env.Port)
-				params.Log.Info("grpc start", zap.String("address", address))
+				address := fmt.Sprintf("%s:%d", p.Env.Address, p.Env.Port)
+				p.Log.Info("grpc start", zap.String("address", address))
 				lis, err := net.Listen("tcp", address)
 				if err != nil {
-					params.Log.Error("failed to listen", zap.Error(err))
+					p.Log.Error("failed to listen", zap.Error(err))
 					return err
 				}
 				go server.Serve(lis)
