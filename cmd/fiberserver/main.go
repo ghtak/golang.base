@@ -4,7 +4,6 @@ import (
 	"github.com/ghtak/golang.grpc.base/cmd/fiberserver/app/echo"
 	"github.com/ghtak/golang.grpc.base/internal/adapter/fiberfx"
 	"github.com/ghtak/golang.grpc.base/internal/core"
-	"github.com/gofiber/fiber/v2"
 	"go.uber.org/fx"
 )
 
@@ -18,6 +17,6 @@ func main() {
 		),
 		fx.Provide(
 			fiberfx.AsRouter(echo.NewController)),
-		fx.Invoke(func(app *fiber.App) {}),
+		fx.Invoke(func(p fiberfx.RunServerParams) {}),
 	).Run()
 }

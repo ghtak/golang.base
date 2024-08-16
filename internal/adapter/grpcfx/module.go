@@ -2,6 +2,7 @@ package grpcfx
 
 import (
 	"go.uber.org/fx"
+	"google.golang.org/grpc"
 )
 
 var (
@@ -13,3 +14,8 @@ var Module = fx.Module(
 	fx.Provide(NewServer, NewEnv),
 	ModuleService,
 )
+
+type RunServerParams struct {
+	fx.In
+	Server *grpc.Server
+}

@@ -1,1 +1,1 @@
-# golang.gprc.base
+# golang.base

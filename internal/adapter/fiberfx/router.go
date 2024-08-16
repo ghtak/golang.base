@@ -11,7 +11,7 @@ const (
 )
 
 type Router interface {
-	Register(app *fiber.App) error
+	Register(router fiber.Router) error
 }
 
 func AsRouter(i interface{}) interface{} {
@@ -20,9 +20,9 @@ func AsRouter(i interface{}) interface{} {
 
 type routerInit struct{}
 
-func RegisterRouter(routers []Router, app *fiber.App) routerInit {
-	for _, router := range routers {
-		router.Register(app)
+func RegisterRouter(routers []Router, router fiber.Router) routerInit {
+	for _, r := range routers {
+		r.Register(router)
 	}
 	return routerInit{}
 }

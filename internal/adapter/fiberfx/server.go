@@ -19,7 +19,8 @@ type ServerParams struct {
 
 type ServerResults struct {
 	fx.Out
-	App *fiber.App
+	App    *fiber.App
+	Router fiber.Router
 }
 
 func NewServer(p ServerParams) (ServerResults, error) {
@@ -46,5 +47,8 @@ func NewServer(p ServerParams) (ServerResults, error) {
 			},
 		},
 	)
-	return ServerResults{App: app}, nil
+	return ServerResults{
+		App:    app,
+		Router: app,
+	}, nil
 }

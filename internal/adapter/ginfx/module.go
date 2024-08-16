@@ -15,7 +15,7 @@ var Module = fx.Module(
 	ModuleRouter,
 )
 
-type RunParams struct {
+type RunServerParams struct {
 	fx.In
 	Engine *gin.Engine
 }

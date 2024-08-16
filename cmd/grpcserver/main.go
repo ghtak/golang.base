@@ -5,7 +5,6 @@ import (
 	"github.com/ghtak/golang.grpc.base/internal/adapter/grpcfx"
 	"github.com/ghtak/golang.grpc.base/internal/core"
 	"go.uber.org/fx"
-	"google.golang.org/grpc"
 )
 
 func main() {
@@ -17,6 +16,6 @@ func main() {
 			grpcfx.AsService(app.NewGreetService),
 			grpcfx.AsService(app.NewUserService),
 		),
-		fx.Invoke(func(*grpc.Server) {}),
+		fx.Invoke(func(params grpcfx.RunServerParams) {}),
 	).Run()
 }
