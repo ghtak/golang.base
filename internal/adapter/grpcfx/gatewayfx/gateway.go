@@ -38,7 +38,7 @@ func NewGateway(p GatewayParams) (GatewayResult, error) {
 	mux.HandleFunc("/swagger.json", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "gen/openapiv2/helloworld.swagger.json")
 	})
-	mux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("swagger-ui/dist"))))
+	mux.Handle("/swagger-ui/", http.StripPrefix("/swagger-ui/", http.FileServer(http.Dir("assets/swagger-ui/dist"))))
 	mux.Handle("/", gwMux)
 	return GatewayResult{
 		Mux:         mux,
