@@ -3,7 +3,6 @@ package fiberfx
 import (
 	"context"
 	"fmt"
-	"github.com/gofiber/contrib/fiberzap/v2"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -15,6 +14,7 @@ type ServerParams struct {
 	Env          Env
 	Logger       *zap.Logger
 	ErrorHandler ErrorHandler `optional:"true"`
+	Middlewares  Middlewares  `optional:"true"`
 }
 
 type ServerResults struct {
@@ -22,20 +22,22 @@ type ServerResults struct {
 	App *fiber.App
 }
 
-func NewServer(params ServerParams) (ServerResults, error) {
+func NewServer(p ServerParams) (ServerResults, error) {
 	var app *fiber.App
-	if params.ErrorHandler != nil {
+	if p.ErrorHandler != nil {
 		app = fiber.New(fiber.Config{
-			ErrorHandler: params.ErrorHandler,
+			ErrorHandler: p.ErrorHandler,
 		})
 	} else {
 		app = fiber.New()
 	}
-	app.Use(fiberzap.New(fiberzap.Config{Logger: params.Logger}))
-	params.Lc.Append(
+	if p.Middlewares != nil {
+		p.Middlewares.Use(app)
+	}
+	p.Lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				address := fmt.Sprintf("%s:%d", params.Env.Address, params.Env.Port)
+				address := fmt.Sprintf("%s:%d", p.Env.Address, p.Env.Port)
 				go app.Listen(address)
 				return nil
 			},
