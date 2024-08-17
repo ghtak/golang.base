@@ -50,3 +50,8 @@ func Run(p RunParams) (RunResult, error) {
 		})
 	return RunResult{}, nil
 }
+
+type DependParams struct {
+	fx.In
+	ServerMiddleware ServerMiddleware `optional:"true"`
+}

@@ -45,3 +45,8 @@ func Run(p RunParams) RunResult {
 		})
 	return RunResult{}
 }
+
+type DependParams struct {
+	fx.In
+	Middlewares Middlewares `optional:"true"`
+}

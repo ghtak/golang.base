@@ -47,3 +47,9 @@ func Run(p RunParams) RunResult {
 	)
 	return RunResult{}
 }
+
+type DependParams struct {
+	fx.In
+	ErrorHandler ErrorHandler `optional:"true"`
+	Middlewares  Middlewares  `optional:"true"`
+}

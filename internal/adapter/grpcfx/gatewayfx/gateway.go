@@ -23,6 +23,7 @@ func NewGateway(p GatewayParams) (GatewayResult, error) {
 	return GatewayResult{
 		Handler:    handler,
 		CancelFunc: cancel,
+		GatewayMux: gwMux,
 	}, nil
 }
 
@@ -39,6 +40,7 @@ type GatewayResult struct {
 	// fx.Out
 	CancelFunc context.CancelFunc
 	Handler    http.Handler
+	GatewayMux *runtime.ServeMux
 }
 
 func (p *GatewayParams) SeverMux() *runtime.ServeMux {

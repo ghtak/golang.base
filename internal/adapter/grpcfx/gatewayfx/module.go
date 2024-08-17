@@ -78,3 +78,10 @@ func RunWithGrpc(p RunWithGrpcParams) RunWithGrpcResult {
 		})
 	return RunWithGrpcResult{}
 }
+
+type DependParams struct {
+	fx.In
+	ServerMuxMiddleware   ServerMuxMiddleware   `optional:"true"`
+	GrpcDialMiddleware    GrpcDialMiddleware    `optional:"true"`
+	MultiplexerMiddleware MultiplexerMiddleware `optional:"true"`
+}
