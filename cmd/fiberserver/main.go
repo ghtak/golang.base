@@ -17,6 +17,6 @@ func main() {
 		),
 		fx.Provide(
 			fiberfx.AsRouter(echo.NewController)),
-		fx.Invoke(func(p fiberfx.RunServerParams) {}),
+		fx.Invoke(func(result fiberfx.RunResult) {}),
 	).Run()
 }

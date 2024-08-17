@@ -1,7 +1,6 @@
 package fiberfx
 
 import (
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/fx"
 )
@@ -18,17 +17,18 @@ func AsRouter(i interface{}) interface{} {
 	return fx.Annotate(i, fx.As(new(Router)), fx.ResultTags(tagRouter))
 }
 
-type routerInit struct{}
-
-func RegisterRouter(routers []Router, router fiber.Router) routerInit {
-	for _, r := range routers {
-		r.Register(router)
-	}
-	return routerInit{}
+type RouterParams struct {
+	fx.In
+	Router  fiber.Router
+	Routers []Router `group:"fiberfx.Router"`
 }
 
-var ModuleRouter = fx.Module(
-	fmt.Sprintf("%s.Router", moduleName),
-	fx.Provide(fx.Annotate(RegisterRouter, fx.ParamTags(tagRouter))),
-	fx.Invoke(func(routerInit) {}),
-)
+type RouterResult struct {
+}
+
+func RegisterRouter(p RouterParams) RouterResult {
+	for _, r := range p.Routers {
+		r.Register(p.Router)
+	}
+	return RouterResult{}
+}

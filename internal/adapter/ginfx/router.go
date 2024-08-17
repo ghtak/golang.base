@@ -1,7 +1,6 @@
 package ginfx
 
 import (
-	"fmt"
 	"github.com/gin-gonic/gin"
 	"go.uber.org/fx"
 )
@@ -18,18 +17,18 @@ func AsRouter(i interface{}) interface{} {
 	return fx.Annotate(i, fx.As(new(Router)), fx.ResultTags(tagRouter))
 }
 
-type initRouter struct {
+type RouterParams struct {
+	fx.In
+	Routers []Router `group:"ginfx.Router"`
+	Engine  *gin.Engine
 }
 
-func RegisterRouter(routers []Router, engine *gin.Engine) initRouter {
-	for _, router := range routers {
-		router.Register(engine)
+type RouterResult struct {
+}
+
+func RegisterRouter(p RouterParams) RouterResult {
+	for _, router := range p.Routers {
+		router.Register(p.Engine)
 	}
-	return initRouter{}
+	return RouterResult{}
 }
-
-var ModuleRouter = fx.Module(
-	fmt.Sprintf("%s.Router", moduleName),
-	fx.Provide(fx.Annotate(RegisterRouter, fx.ParamTags(tagRouter))),
-	fx.Invoke(func(initRouter) {}),
-)
