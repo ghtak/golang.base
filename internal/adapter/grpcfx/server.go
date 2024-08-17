@@ -10,17 +10,9 @@ type ServerParams struct {
 	ServerMiddleware ServerMiddleware `optional:"true"`
 }
 
-type ServerResults struct {
-	fx.Out
-	Server *grpc.Server
-}
-
-func NewServer(p ServerParams) (ServerResults, error) {
-	var server *grpc.Server
+func NewServer(p ServerParams) *grpc.Server {
 	if p.ServerMiddleware != nil {
-		server = grpc.NewServer(p.ServerMiddleware.Options()...)
-	} else {
-		server = grpc.NewServer()
+		return grpc.NewServer(p.ServerMiddleware.Options()...)
 	}
-	return ServerResults{Server: server}, nil
+	return grpc.NewServer()
 }

@@ -17,6 +17,6 @@ func main() {
 		fx.Provide(
 			ginfx.AsRouter(echo.NewController),
 		),
-		fx.Invoke(func(p ginfx.RunResult) {}),
+		fx.Invoke(func(r ginfx.RunResult) {}),
 	).Run()
 }

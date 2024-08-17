@@ -2,7 +2,6 @@ package grpcfx
 
 import (
 	"context"
-	"fmt"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
@@ -30,9 +29,8 @@ func Run(p RunParams) (RunResult, error) {
 	p.Lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				address := fmt.Sprintf("%s:%d", p.Env.Address, p.Env.Port)
-				p.Log.Info("grpc start", zap.String("address", address))
-				lis, err := net.Listen("tcp", address)
+				p.Log.Info("grpc start", zap.String("address", p.Env.Address))
+				lis, err := net.Listen("tcp", p.Env.Address)
 				if err != nil {
 					p.Log.Error("failed to listen", zap.Error(err))
 					return err

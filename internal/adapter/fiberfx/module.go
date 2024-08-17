@@ -2,7 +2,6 @@ package fiberfx
 
 import (
 	"context"
-	"fmt"
 	"github.com/gofiber/fiber/v2"
 	"go.uber.org/fx"
 	"go.uber.org/zap"
@@ -38,8 +37,7 @@ func Run(p RunParams) RunResult {
 	p.Lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
-				address := fmt.Sprintf("%s:%d", p.Env.Address, p.Env.Port)
-				go p.App.Listen(address)
+				go p.App.Listen(p.Env.Address)
 				return nil
 			},
 			OnStop: func(ctx context.Context) error {

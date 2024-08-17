@@ -29,7 +29,7 @@ type RunParams struct {
 type RunResult struct{}
 
 func Run(p RunParams) RunResult {
-	srv := &http.Server{Addr: p.Env.ServerAddress(), Handler: p.Engine}
+	srv := &http.Server{Addr: p.Env.Address, Handler: p.Engine}
 	p.Lc.Append(
 		fx.Hook{
 			OnStart: func(ctx context.Context) error {
