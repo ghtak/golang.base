@@ -17,11 +17,17 @@ func AsService(s interface{}) interface{} {
 	return fx.Annotate(s, fx.As(new(Service)), fx.ResultTags(tagService))
 }
 
-type RunRegisterServiceResults struct{}
+type ServiceParams struct {
+	fx.In
+	Server   *grpc.Server
+	Services []Service `group:"grpcfx.Service"`
+}
 
-func registerService(services []Service, s *grpc.Server) RunRegisterServiceResults {
-	for _, service := range services {
-		service.Register(s)
+type ServiceResults struct{}
+
+func RegisterService(p ServiceParams) ServiceResults {
+	for _, service := range p.Services {
+		service.Register(p.Server)
 	}
-	return RunRegisterServiceResults{}
+	return ServiceResults{}
 }
