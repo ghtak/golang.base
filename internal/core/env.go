@@ -12,28 +12,28 @@ func NewEnv() Env {
 	cfgType := flag.String("cfg-type", "json", "set config type json, yaml. toml")
 	flag.Parse()
 	env := Env{viper.New()}
-	env.viper.SetConfigFile(*cfgFile)
-	env.viper.SetConfigType(*cfgType)
-	if err := env.viper.ReadInConfig(); err != nil {
+	env.Viper.SetConfigFile(*cfgFile)
+	env.Viper.SetConfigType(*cfgType)
+	if err := env.Viper.ReadInConfig(); err != nil {
 		log.Fatal(fmt.Sprintf("ReadInConfig Fail With %s %s", *cfgFile, *cfgType), err)
 	}
 	return env
 }
 
 type Env struct {
-	viper *viper.Viper
+	Viper *viper.Viper
 }
 
 func (e Env) GetString(key string, defValue string) string {
-	if e.viper.IsSet(key) {
-		return e.viper.GetString(key)
+	if e.Viper.IsSet(key) {
+		return e.Viper.GetString(key)
 	}
 	return defValue
 }
 
 func (e Env) GetInt(key string, defValue int) int {
-	if e.viper.IsSet(key) {
-		return e.viper.GetInt(key)
+	if e.Viper.IsSet(key) {
+		return e.Viper.GetInt(key)
 	}
 	return defValue
 }
@@ -52,16 +52,16 @@ type SubEnv struct {
 
 func (e SubEnv) GetString(key string, defValue string) string {
 	key = fmt.Sprintf("%s.%s", e.envPrefix, key)
-	if e.viper.IsSet(key) {
-		return e.viper.GetString(key)
+	if e.Viper.IsSet(key) {
+		return e.Viper.GetString(key)
 	}
 	return defValue
 }
 
 func (e SubEnv) GetInt(key string, defValue int) int {
 	key = fmt.Sprintf("%s.%s", e.envPrefix, key)
-	if e.viper.IsSet(key) {
-		return e.viper.GetInt(key)
+	if e.Viper.IsSet(key) {
+		return e.Viper.GetInt(key)
 	}
 	return defValue
 }

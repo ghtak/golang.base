@@ -7,7 +7,7 @@ proto_gen:
 	buf generate
 
 docker_build:
-	docker build --tag golang.grpc.base .
+	docker build --tag golang.base .
 
 docker_run:
-	docker run --publish 50051:50051 golang.grpc.base
+	docker run --publish 50051:50051 golang.base

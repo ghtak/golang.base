@@ -19,7 +19,7 @@ const (
 )
 
 func NewLogger(env Env) *zap.Logger {
-	handlers := env.viper.GetStringSlice("log.handlers")
+	handlers := env.Viper.GetStringSlice("log.handlers")
 	var cores []zapcore.Core
 	for _, handler := range handlers {
 		core := NewCore(handler, env)
