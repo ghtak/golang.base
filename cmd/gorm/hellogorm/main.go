@@ -4,6 +4,7 @@ import (
 	"github.com/ghtak/golang.grpc.base/internal/adapter/gormfx"
 	"github.com/ghtak/golang.grpc.base/internal/core"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"gorm.io/driver/sqlite"
 	"gorm.io/gorm"
 )
@@ -14,14 +15,30 @@ type Product struct {
 	Price uint
 }
 
+type MainDB struct {
+	DB gormfx.DB
+}
+
+type MainDBResults struct {
+	fx.Out
+	MainDB MainDB
+}
+
+func NewMainDB(env gormfx.Env, logger *zap.Logger) MainDBResults {
+	return MainDBResults{
+		MainDB: MainDB{DB: gormfx.NewDB(env.DbConnInfos["main"], logger)},
+	}
+}
+
 func main() {
 	fx.New(
 		core.Module,
 		gormfx.Module,
+		fx.Provide(NewMainDB),
 		fx.Invoke(
-			func(db *gormfx.Database) {
+			func(p MainDB) {
 				// 테이블 자동 생성
-				mainDB := db.GetDatabase("main")
+				mainDB := p.DB.Replicas.Next()
 				mainDB.AutoMigrate(&Product{})
 
 				// 생성

@@ -5,12 +5,59 @@ import (
 	"go.uber.org/zap"
 )
 
-type envDatabase struct {
-	ConnectionConfigs []envConnectionConfigsItem `mapstructure:"connection_configs"`
-	Databases         []envDatabasesItem         `mapstructure:"databases"`
+func newDataSources(srcs []envDatasource, cfgs map[string]ConnCfg) []DataSource {
+	sources := make([]DataSource, len(srcs))
+	for i := 0; i < len(srcs); i++ {
+		sources[i] = DataSource{
+			Driver: srcs[i].Driver,
+			Dsn:    srcs[i].Dsn,
+			Cfg:    cfgs[srcs[i].ConnCfg],
+		}
+	}
+	return sources
 }
 
-type envConnectionConfigsItem struct {
+func NewEnv(env core.Env, logger *zap.Logger) Env {
+	egorm := envGorm{}
+	err := env.Viper.Sub("gorm").Unmarshal(&egorm)
+	if err != nil {
+		logger.Error("gorm conf fail", zap.Error(err))
+		return Env{}
+	}
+	cfgMap := map[string]ConnCfg{}
+	for _, c := range egorm.ConnCfgs {
+		cfgMap[c.Name] = c
+	}
+	infos := map[string]DbConnInfo{}
+	for _, envConnInfo := range egorm.DbConnInfos {
+		infos[envConnInfo.Name] = DbConnInfo{
+			Name:     envConnInfo.Name,
+			Sources:  newDataSources(envConnInfo.Sources, cfgMap),
+			Replicas: newDataSources(envConnInfo.Replicas, cfgMap),
+		}
+	}
+	return Env{
+		DbConnInfos: infos,
+	}
+}
+
+type DataSource struct {
+	Driver string
+	Dsn    string
+	Cfg    ConnCfg
+}
+
+type DbConnInfo struct {
+	Name     string
+	Sources  []DataSource
+	Replicas []DataSource
+}
+
+type Env struct {
+	DbConnInfos map[string]DbConnInfo
+}
+
+type ConnCfg struct {
 	Name            string `mapstructure:"name"`
 	MaxOpenConns    int    `mapstructure:"max_open_conns"`
 	MaxIdleConns    int    `mapstructure:"max_idle_conns"`
@@ -18,60 +65,19 @@ type envConnectionConfigsItem struct {
 	ConnMaxLifeTime int    `mapstructure:"conn_max_life_time"`
 }
 
-type envDatabaseConnectionInfo struct {
-	Driver string `mapstructure:"driver"`
-	Dsn    string `mapstructure:"dsn"`
+type envDatasource struct {
+	Driver  string `mapstructure:"driver"`
+	Dsn     string `mapstructure:"dsn"`
+	ConnCfg string `mapstructure:"conn_cfg"`
 }
 
-type envPrimary struct {
-	Config string `mapstructure:"connection_config"`
-	Driver string `mapstructure:"driver"`
-	Dsn    string `mapstructure:"dsn"`
+type envDbConnInfo struct {
+	Name     string          `mapstructure:"name"`
+	Sources  []envDatasource `mapstructure:"sources"`
+	Replicas []envDatasource `mapstructure:"replicas"`
 }
 
-type envSecondary struct {
-	Config   string                      `mapstructure:"connection_config"`
-	Sources  []envDatabaseConnectionInfo `mapstructure:"sources"`
-	Replicas []envDatabaseConnectionInfo `mapstructure:"replicas"`
-}
-
-type envDatabasesItem struct {
-	Name      string       `mapstructure:"name"`
-	Primary   envPrimary   `mapstructure:"primary"`
-	Secondary envSecondary `mapstructure:"secondary"`
-}
-
-type Env struct {
-	envDatabase
-	ConnectionConfigsMap map[string]envConnectionConfigsItem
-}
-
-func NewEnv(env core.Env, logger *zap.Logger) Env {
-	envDB := envDatabase{}
-	err := env.Viper.Sub("database").Unmarshal(&envDB)
-	if err != nil {
-		logger.Error("database conf fail", zap.Error(err))
-	}
-	connCfgMap := map[string]envConnectionConfigsItem{}
-	for _, c := range envDB.ConnectionConfigs {
-		connCfgMap[c.Name] = c
-	}
-	for _, db := range envDB.Databases {
-		_, ok := connCfgMap[db.Primary.Config]
-		if ok == false {
-			logger.Error("database conf connection_config not exist",
-				zap.String("database.primary", db.Name),
-				zap.String("database.config", db.Primary.Config))
-		}
-		_, ok = connCfgMap[db.Secondary.Config]
-		if ok == false {
-			logger.Error("database conf connection_config not exist",
-				zap.String("database.primary", db.Name),
-				zap.String("database.config", db.Secondary.Config))
-		}
-	}
-	return Env{
-		envDatabase:          envDB,
-		ConnectionConfigsMap: connCfgMap,
-	}
+type envGorm struct {
+	ConnCfgs    []ConnCfg       `mapstructure:"conn_cfgs"`
+	DbConnInfos []envDbConnInfo `mapstructure:"db_conn_infos"`
 }
