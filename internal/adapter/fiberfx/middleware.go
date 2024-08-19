@@ -12,14 +12,14 @@ type Middlewares interface {
 	Use(app *fiber.App) error
 }
 
-type defaultMiddlewares func(app *fiber.App) error
+type MiddlewaresFunc func(app *fiber.App) error
 
-func (h defaultMiddlewares) Use(app *fiber.App) error {
+func (h MiddlewaresFunc) Use(app *fiber.App) error {
 	return h(app)
 }
 
 func NewDefaultMiddlewares(logger *zap.Logger) Middlewares {
-	return defaultMiddlewares(func(app *fiber.App) error {
+	return MiddlewaresFunc(func(app *fiber.App) error {
 		app.Use(fiberzap.New(fiberzap.Config{Logger: logger}))
 		app.Use(cors.New(cors.ConfigDefault))
 		app.Use(recover.New())
