@@ -13,14 +13,14 @@ type ServerMiddleware interface {
 	Options() []grpc.ServerOption
 }
 
-type defaultServerMiddleware func() []grpc.ServerOption
+type ServerMiddlewareFunc func() []grpc.ServerOption
 
-func (m defaultServerMiddleware) Options() []grpc.ServerOption {
+func (m ServerMiddlewareFunc) Options() []grpc.ServerOption {
 	return m()
 }
 
 func NewDefaultServerMiddleware(logger *zap.Logger) ServerMiddleware {
-	return defaultServerMiddleware(func() []grpc.ServerOption {
+	return ServerMiddlewareFunc(func() []grpc.ServerOption {
 		return []grpc.ServerOption{
 			grpc.ChainUnaryInterceptor(
 				logging.UnaryServerInterceptor(InterceptorLogger(logger), NewLoggingOptions()...),

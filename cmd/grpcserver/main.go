@@ -6,9 +6,49 @@ import (
 	"github.com/ghtak/golang.grpc.base/internal/adapter/grpcfx"
 	"github.com/ghtak/golang.grpc.base/internal/adapter/grpcfx/gatewayfx"
 	"github.com/ghtak/golang.grpc.base/internal/core"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/logging"
+	"github.com/grpc-ecosystem/go-grpc-middleware/v2/interceptors/recovery"
 	"go.uber.org/fx"
+	"go.uber.org/zap"
 	"google.golang.org/grpc"
 )
+
+func NewServerMiddleware(logger *zap.Logger) grpcfx.ServerMiddleware {
+	return grpcfx.ServerMiddlewareFunc(func() []grpc.ServerOption {
+		return []grpc.ServerOption{
+			grpc.ChainUnaryInterceptor(
+				logging.UnaryServerInterceptor(
+					grpcfx.InterceptorLogger(logger),
+					grpcfx.NewLoggingOptions()...),
+				//selector.UnaryServerInterceptor(
+				//	auth.UnaryServerInterceptor(authFn),
+				//	selector.MatchFunc(selectAuthFn)),
+				recovery.UnaryServerInterceptor(),
+			),
+			grpc.ChainStreamInterceptor(
+				logging.StreamServerInterceptor(
+					grpcfx.InterceptorLogger(logger),
+					grpcfx.NewLoggingOptions()...),
+				//selector.StreamServerInterceptor(
+				//	auth.StreamServerInterceptor(authFn),
+				//	selector.MatchFunc(selectAuthFn)),
+				recovery.StreamServerInterceptor(),
+			),
+			//grpc.KeepaliveEnforcementPolicy(keepalive.EnforcementPolicy{
+			//	MinTime:             5 * time.Minute,
+			//	PermitWithoutStream: false,
+			//}),
+			//grpc.KeepaliveParams(keepalive.ServerParameters{
+			//	MaxConnectionIdle:     15 * time.Minute,
+			//	MaxConnectionAge:      30 * time.Minute,
+			//	MaxConnectionAgeGrace: 5 * time.Minute,
+			//	Time:                  5 * time.Minute,
+			//	Timeout:               1 * time.Minute,
+			//}),
+			//grpc.Creds(...),
+		}
+	})
+}
 
 func main() {
 	fx.New(
@@ -16,7 +56,7 @@ func main() {
 		fx.Module(
 			"grpc",
 			grpcfx.Module,
-			fx.Provide(grpcfx.NewDefaultServerMiddleware),
+			fx.Provide(NewServerMiddleware),
 			fx.Provide(
 				grpcfx.AsService(greeter.NewService),
 				grpcfx.AsService(user.NewService),
