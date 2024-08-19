@@ -15,8 +15,8 @@ type wsController struct {
 }
 
 func (c wsController) Register(router fiber.Router) error {
-	router.Get("/ws/:id", websocket.New(func(c *websocket.Conn) {
-		log.Println(c.Params("id"))
+	router.Get("/ws", websocket.New(func(c *websocket.Conn) {
+		// "/ws/:id" -> log.Println(c.Params("id"))
 		// websocket.Conn bindings https://pkg.go.dev/github.com/fasthttp/websocket?tab=doc#pkg-index
 		var (
 			mt  int
